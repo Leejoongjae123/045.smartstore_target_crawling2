@@ -385,6 +385,7 @@ class Thread(QThread):
                             print("최저가 보단 높으므로 변경")
                             while True:
                                 try:
+
                                     price_change = price_least - price_tic
                                     if price_least - price_tic < price_low:
                                         price_change = price_low
