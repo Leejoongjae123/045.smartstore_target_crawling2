@@ -160,12 +160,23 @@ def load_excel(file_path):
             break
         name = ws.cell(row=i, column=2).value
         url_list= ws.cell(row=i, column=3).value
-
-        url_list=url_list.split(",")
+        if url_list==None:
+            print("URL없음")
+            url_list=[]
+        else:
+            url_list=url_list.split(",")
 
         price_low = ws.cell(row=i, column=4).value
-        price_tic = int(ws.cell(row=i, column=5).value)
+        if price_low==None:
+            price_low==0
+        price_tic = ws.cell(row=i, column=5).value
+        if price_tic==None:
+            price_tic=0
+        else:
+            price_tic=int(price_tic)
         switch = ws.cell(row=i, column=6).value
+        if switch==None:
+            switch=0
 
         info = [productNo, name,url_list,price_low,price_tic,switch]
         info_list.append(info)
@@ -225,22 +236,60 @@ def get_catalog_price(url, store_name):
     return least_price, second_price, is_first
 def get_target_price(url):
     # url = 'https://smartstore.naver.com/1cc/products/7190863120?NaPm=ct%3Dlfm3pj5k%7Cci%3D743a40b6df75b561265ff23978ea1f990e632c4a%7Ctr%3Dslsc%7Csn%3D4367970%7Chk%3D3b9234ab4ccb9ace4a557ccedc0848348b46b343'
+    # headers = {
+    #     'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_2 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13F69 Safari/601.1',
+    #     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    #     'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+    #     'Accept-Encoding': 'none',
+    #     'Accept-Language': 'en-US,en;q=0.8',
+    #     'Connection': 'keep-alive'}
+    # res = requests.get(url, headers=headers)
+    # res.raise_for_status()
+    # print("status_code:",res.status_code)
+    cookies = {
+        'wcs_bt': 's_3071baf19a631:1682420035',
+        'NNB': 'IZBJERH4DQMGI',
+        'ASID': '798f73fa0000018710b1765100000069',
+        'nx_ssl': '2',
+        'page_uid': 'iZPUqsp0JywssgirgSCssssstu8-511680',
+        'nid_inf': '-1099904973',
+        'NID_AUT': 'nj2/Cf2qs6SysMzTla1x6xwHMV7mTywdQj35a3OPL2V+oAKlmF5Gh2SmJJYRlv8m',
+        'NID_JKL': 'UFU7XiPzWfW5FdvxBslc5RBmEvgyFL2pSWBWnlSjuBU=',
+        'CBI_SES': '3aaafB89LXpWNaP14NB0sAJekkgosoyGehigW12VsqUmIrTvL3cUuJ+cehrli/STxVzNlBUTLj/AuSwpft4mOimO4RcWSXvCZu40QhblWrRWJtKRRl4pdVtb//Lo20Xl+Cb6He8aaLOClYAZJWRcB62hTTsfnwaXhuPTxsvisu/47QJagVAysRUXrN9DIyPGd7pngb4PWzVxfanhvAMC2g+pskgx2SFOgnDs45L8knQf6mnTyeQGuR6ehgmwUFk68jiQK+/c1POyjOkT2mdCL0eQhetccYX7gDGeuKqqbN8/bBUKDQkEwoOF+xCrNPGKSKzpO8SZey9hmw2WiATw8lo/pmWqLdfmMuB0mD/dKEjbizEJeBNOLxRR0yw5GLHrF2cSPrbmfdKK7Vmmq8OrxWnkb+BiwaPq3awQCfoibfC0lv2fSeda9TC3/YiJzmKNizr6ng5qzy70uhCrt0yy8zWuK13lVBC/+j63X8eVuX4=',
+        'NSI': 'jXU6zBMNX58K3spp2J2GwYrhajajRUMiVsB5ViRy',
+        'NID_SES': 'AAABgVcOm4AnFKck18sYuHQ9svO9v70meeQKAWxKgn1kSAeWrIoSVEVO9xJ3tfp6a+VWezq+4aaADlyZOxv4C7vn8/L361oHWXkzfH1GFrXwy2eAB9kqyWMn9ejpFugU8MuqgaYyYdQ7tZFocRqQoRNpP3D9vuWtTNLJU57h5ibbo9wRjeV17N4Y0f2WrICduRG/yTyP9OdYtuSbBtzhIF/EHIuKYVz3RoiFjQNKmFNR8avZOafAVURfZ5n9/Qw5zN3tUoJsnc+PpZU4/ISukWB7wO0hK3HDNBrbTqUXcwICwUm6Bgg405ymf7hnaUIvYvTFFqHTq7h7PcikOYzk1IsqOzarXGTlIBAOEmT/pUgwbmg5qX+14pVbKdlXbU6CQBksEr1SEq76jxRQlqWPGxZ3NGxyuAereLj0BGcmOHEKtRUVwnHuyDlwZpHtDBpstrXtVBC7H05qqxAm9+dlBreVLtdNddXUJJ49Wpd9mRHB7iW4IkPYh6J7rshamPbqd8AdGYknaWy9pBCm7Sy0SaDF4yI=',
+        'CBI_CHK': '"r5V0mf9uRUZHZ/vmLGy3ez7f4/k4aqWXL5o03eN68frE5YllaTGhBcdz+MnJf5Y88cJcA5g/ovxvsFwAQtfPfLQAPKE0pyhqEVpU/Vw+N96IjAP+FmnM7dm7HjZdM9zlSKfAG9190GsWC0TO1G/NdtBVht/JFKuiF0n5LFVT1LQ="',
+    }
     headers = {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_2 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13F69 Safari/601.1',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
-        'Accept-Encoding': 'none',
-        'Accept-Language': 'en-US,en;q=0.8',
-        'Connection': 'keep-alive'}
-    res = requests.get(url, headers=headers)
-    res.raise_for_status()
-    soup = BeautifulSoup(res.text, 'lxml')
+        'authority': 'smartstore.naver.com',
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'accept-language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+        'cache-control': 'max-age=0',
+        # 'cookie': 'wcs_bt=s_3071baf19a631:1682420035; NNB=IZBJERH4DQMGI; ASID=798f73fa0000018710b1765100000069; nx_ssl=2; page_uid=iZPUqsp0JywssgirgSCssssstu8-511680; nid_inf=-1099904973; NID_AUT=nj2/Cf2qs6SysMzTla1x6xwHMV7mTywdQj35a3OPL2V+oAKlmF5Gh2SmJJYRlv8m; NID_JKL=UFU7XiPzWfW5FdvxBslc5RBmEvgyFL2pSWBWnlSjuBU=; CBI_SES=3aaafB89LXpWNaP14NB0sAJekkgosoyGehigW12VsqUmIrTvL3cUuJ+cehrli/STxVzNlBUTLj/AuSwpft4mOimO4RcWSXvCZu40QhblWrRWJtKRRl4pdVtb//Lo20Xl+Cb6He8aaLOClYAZJWRcB62hTTsfnwaXhuPTxsvisu/47QJagVAysRUXrN9DIyPGd7pngb4PWzVxfanhvAMC2g+pskgx2SFOgnDs45L8knQf6mnTyeQGuR6ehgmwUFk68jiQK+/c1POyjOkT2mdCL0eQhetccYX7gDGeuKqqbN8/bBUKDQkEwoOF+xCrNPGKSKzpO8SZey9hmw2WiATw8lo/pmWqLdfmMuB0mD/dKEjbizEJeBNOLxRR0yw5GLHrF2cSPrbmfdKK7Vmmq8OrxWnkb+BiwaPq3awQCfoibfC0lv2fSeda9TC3/YiJzmKNizr6ng5qzy70uhCrt0yy8zWuK13lVBC/+j63X8eVuX4=; NSI=jXU6zBMNX58K3spp2J2GwYrhajajRUMiVsB5ViRy; NID_SES=AAABgVcOm4AnFKck18sYuHQ9svO9v70meeQKAWxKgn1kSAeWrIoSVEVO9xJ3tfp6a+VWezq+4aaADlyZOxv4C7vn8/L361oHWXkzfH1GFrXwy2eAB9kqyWMn9ejpFugU8MuqgaYyYdQ7tZFocRqQoRNpP3D9vuWtTNLJU57h5ibbo9wRjeV17N4Y0f2WrICduRG/yTyP9OdYtuSbBtzhIF/EHIuKYVz3RoiFjQNKmFNR8avZOafAVURfZ5n9/Qw5zN3tUoJsnc+PpZU4/ISukWB7wO0hK3HDNBrbTqUXcwICwUm6Bgg405ymf7hnaUIvYvTFFqHTq7h7PcikOYzk1IsqOzarXGTlIBAOEmT/pUgwbmg5qX+14pVbKdlXbU6CQBksEr1SEq76jxRQlqWPGxZ3NGxyuAereLj0BGcmOHEKtRUVwnHuyDlwZpHtDBpstrXtVBC7H05qqxAm9+dlBreVLtdNddXUJJ49Wpd9mRHB7iW4IkPYh6J7rshamPbqd8AdGYknaWy9pBCm7Sy0SaDF4yI=; CBI_CHK="r5V0mf9uRUZHZ/vmLGy3ez7f4/k4aqWXL5o03eN68frE5YllaTGhBcdz+MnJf5Y88cJcA5g/ovxvsFwAQtfPfLQAPKE0pyhqEVpU/Vw+N96IjAP+FmnM7dm7HjZdM9zlSKfAG9190GsWC0TO1G/NdtBVht/JFKuiF0n5LFVT1LQ="',
+        'sec-ch-ua': '"Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'same-origin',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36',
+    }
+
+    response = requests.get(url, cookies=cookies,headers=headers)
+
+    soup = BeautifulSoup(response.text, 'lxml')
+    # print(soup.prettify())
     head = soup.find('head')
+
     script = head.find_all('script')[0]
     position_fr = str(script).find("{")
     position_rr = str(script).rfind("}")
     result_raw = str(script)[position_fr:position_rr + 1]
+    # print(result_raw)
     result = int(json.loads(result_raw)['offers']['price'])
+
     print("타겟가격:",result)
     return result
 
@@ -317,7 +366,7 @@ class Thread(QThread):
                     nownow = datetime.datetime.now()
                     nownow = nownow.strftime("%Y%m%d_%H%M")
                     print("★★★★★★★★★★★★★★★★★★★★★★★★★★★")
-                    text="{}번째 상품 크롤링 중.. 번호 : {}".format(index+1,productNo)
+                    text="{}번째 상품 크롤링 중.. 번호 : {} switch:{}".format(index+1,productNo,switch)
                     print(text)
                     self.user_signal.emit(text)
 
@@ -337,10 +386,11 @@ class Thread(QThread):
                         try:
                             target_price_list=[]
                             for url_elem in url_list:
+                                print('url_elem:',url_elem)
                                 target_price=get_target_price(url_elem)
                                 print('target_price:',target_price)
                                 target_price_list.append(target_price)
-                                time.sleep(0.2)
+                                time.sleep(0.5)
                             target_price_list.sort()
                             print('target_price_list_sorted:',target_price_list)
                             price_least=int(target_price_list[0])
@@ -354,7 +404,7 @@ class Thread(QThread):
                     get_token(price_least-price_tic, productNo, self.api_id, self.api_pw)
                     print("현재가격찾기")
                     name, current_price = find_price(productNo)
-                    print("현재가격찾기완료")
+                    print("현재가격은:",current_price)
 
                     if switch==1: #최저가와 상관없이 변경
                         while True:
